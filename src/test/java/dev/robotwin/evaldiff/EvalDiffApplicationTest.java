@@ -39,6 +39,29 @@ class EvalDiffApplicationTest {
     }
 
     @Test
+    void rejectsReportOverwritingInput() throws Exception {
+        Path baseline = Files.copy(Path.of("examples/baseline.json"), tempDir.resolve("baseline.json"));
+        byte[] original = Files.readAllBytes(baseline);
+
+        int exitCode = new EvalDiffApplication().run(new String[]{baseline.toString(), "examples/candidate.json",
+                "--json", baseline.toString()});
+
+        assertEquals(2, exitCode);
+        assertArrayEquals(original, Files.readAllBytes(baseline));
+    }
+
+    @Test
+    void rejectsIdenticalReportPaths() {
+        Path output = tempDir.resolve("comparison.out");
+
+        int exitCode = new EvalDiffApplication().run(new String[]{"examples/baseline.json", "examples/candidate.json",
+                "--json", output.toString(), "--html", output.toString()});
+
+        assertEquals(2, exitCode);
+        assertFalse(Files.exists(output));
+    }
+
+    @Test
     void printsUsage() {
         assertEquals(0, new EvalDiffApplication().run(new String[]{"--help"}));
     }

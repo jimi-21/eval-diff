@@ -65,7 +65,23 @@ public class EvalDiffApplication {
             if (inputs.size() != 2) {
                 throw new IllegalArgumentException("Expected exactly two score_audit JSON inputs");
             }
+            validateOutputPaths(inputs, json, html);
             return new CliOptions(inputs.get(0), inputs.get(1), json, html);
+        }
+
+        private static void validateOutputPaths(List<Path> inputs, Path json, Path html) {
+            if (json != null && html != null && samePath(json, html)) {
+                throw new IllegalArgumentException("JSON and HTML report paths must be different");
+            }
+            for (Path input : inputs) {
+                if ((json != null && samePath(input, json)) || (html != null && samePath(input, html))) {
+                    throw new IllegalArgumentException("Report paths must not overwrite input files: " + input);
+                }
+            }
+        }
+
+        private static boolean samePath(Path left, Path right) {
+            return left.toAbsolutePath().normalize().equals(right.toAbsolutePath().normalize());
         }
     }
 }
